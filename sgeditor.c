@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ncurses.h>
 #include <sys/stat.h>
 #include "sgeditor.h"
 
@@ -61,6 +62,7 @@ int main(int argc, char **argv)
     }
     parse_data(&save, buffer, fileLen);
     //print_data(&save);
+    user_input(&save);
     save_data(&save);
     fclose(file);
 
@@ -227,6 +229,78 @@ void parse_data(SAVEGAME *save, char *buffer, unsigned long fileLen)
 int read_4_le_bytes_as_int(char *buffer, int offset)
 {
     return (unsigned char) buffer[offset+0] | (buffer[offset+1]<<8) | (buffer[offset+2]<<16) | (buffer[offset+3]<<24);
+}
+void clearscreen()
+{
+    if (system("clear")) system( "cls" );
+}
+void user_input(SAVEGAME *save)
+{
+    initscr();
+    int quit = 0;
+    int ch;
+    while (1)
+    {
+        printw("FTL SAVEGAME EDITOR\n");
+        printw("===================\n\n");
+        printw(" Spaceship: %s\n\n", (*save).ss_name);
+        printw(" - Integrity (i): %d\n", (*save).ss_integrity);
+        printw(" - Fuel (f): %d\n", (*save).ss_fuel);
+        printw(" - Missiles (m): %d\n", (*save).ss_missiles);
+        printw(" - Droids (d): %d\n", (*save).ss_droids);
+        printw(" - Scrap (s): %d\n\n", (*save).scrap);
+        attron(A_BOLD);
+        printw("What do you want to change? [I,F,M,D,S] [e=exit] ");
+        attroff(A_BOLD);
+        refresh();
+        ch =  getch();
+        refresh();
+        switch(ch)
+        {
+            case 101: // e 
+                quit=1;
+                break;
+            case 105: // i 
+                printw("\nSet current integrity value: ");
+                scanw("%d", &(*save).ss_integrity);
+                break;
+            case 102: // f 
+                printw("\nSet current fuel value: ");
+                scanw("%d", &(*save).ss_fuel);
+                break;
+            case 100: // d 
+                printw("\nSet current droid value: ");
+                scanw("%d", &(*save).ss_droids);
+                break;
+            case 109: // m 
+                printw("\nSet current missile value: ");
+                scanw("%d", &(*save).ss_missiles);
+                break;
+            case 115: // s 
+                printw("\nSet current scrap value: ");
+                scanw("%d", &(*save).scrap);
+                break;
+        }
+        clear();
+        if (quit == 1) break;
+    }
+    endwin();
+    //int input = 1;
+    //while(1==1)
+    //{
+    //    if (input == 1)
+    //    {
+    //        printf("What do you want to change? [I,F,M,D,S] [esc=exit] ");
+    //    }
+    //    char input;
+    //    scanf("%c", &input);
+    //    input = 0;
+    //    if (input != 10)
+    //    {
+    //        input = 1;
+    //        printf("\nYou pressed %d\n", input);
+    //    }
+    //}
 }
 void print_data(SAVEGAME *save)
 {

@@ -70,3 +70,5 @@ void parse_data(SAVEGAME *save, char *buffer, unsigned long fileLen);
 void print_data(SAVEGAME *save);
 void save_data(SAVEGAME *save);
 int read_4_le_bytes_as_int(char *buffer, int offset);
+void user_input(SAVEGAME *save);
+void clearscreen();
