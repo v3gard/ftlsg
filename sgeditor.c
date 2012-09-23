@@ -54,8 +54,14 @@ int main(int argc, char **argv)
         return 1;
     }
     fread(buffer, fileLen, 1, file);
-    parse_data(&save, buffer);
-    print_data(&save);
+    if (read_4_le_bytes_as_int(buffer, 0) != 2) // simple file format verification
+    {
+        fprintf(stderr, "ERROR! Not an FTL savegame!\n");
+        return 1;
+    }
+    parse_data(&save, buffer, fileLen);
+    //print_data(&save);
+    save_data(&save);
     fclose(file);
 
     // garbage collection
@@ -65,10 +71,11 @@ int main(int argc, char **argv)
     free(save.ss_type2);
     free(save.ss_name2);
     free(save.ss_class);
+    free(save.remaining);
     free(save.events);
     return 0;
 }
-void parse_data(SAVEGAME *save, char *buffer)
+void parse_data(SAVEGAME *save, char *buffer, unsigned long fileLen)
 {
     int adrp = 0;
     (*save).unkn1 = read_4_le_bytes_as_int(buffer, (adrp));
@@ -178,7 +185,6 @@ void parse_data(SAVEGAME *save, char *buffer)
             (*save).current_crew[i].name[j] = (char)buffer[adrp+j];
         }
         (*save).current_crew[i].name[(*save).current_crew[i].name_len] = '\0';
-        printf("%s\n", (*save).current_crew[i].name);
         adrp+=(*save).current_crew[i].name_len;
         (*save).current_crew[i].race_len = read_4_le_bytes_as_int(buffer, (adrp));
         adrp+=4;
@@ -208,11 +214,19 @@ void parse_data(SAVEGAME *save, char *buffer)
         (*save).current_crew[i].unkn18 = read_4_le_bytes_as_int(buffer, (adrp+=4));
         (*save).current_crew[i].unkn19 = read_4_le_bytes_as_int(buffer, (adrp+=4));
     }
-
+    // parse remaining data as a byte stream (not modifyable)
+    adrp+=4;
+    unsigned long remaining = fileLen-adrp;
+    (*save).remaining_len = remaining;
+    (*save).remaining = (char *)malloc(sizeof(char)*remaining+1); 
+    for (int i=0; i<remaining;i++)
+    {
+        (*save).remaining[i] = buffer[adrp+i];
+    }
 }
 int read_4_le_bytes_as_int(char *buffer, int offset)
 {
-    return buffer[offset+0] | (buffer[offset+1]<<8) | (buffer[offset+2]<<16) | (buffer[offset+3]<<24);
+    return (unsigned char) buffer[offset+0] | (buffer[offset+1]<<8) | (buffer[offset+2]<<16) | (buffer[offset+3]<<24);
 }
 void print_data(SAVEGAME *save)
 {
@@ -272,6 +286,78 @@ void print_data(SAVEGAME *save)
         printf(" - Unknown 19: (%d)\n", (*save).current_crew[i].unkn19);
     }
 
+}
+void save_data(SAVEGAME *save)
+{
+   FILE *fp; 
+   fp = fopen("output.sav", "wb");
+   fwrite(&(*save).unkn1, sizeof(int),1,fp);
+   fwrite(&(*save).unkn2, sizeof(int),1,fp);
+   fwrite(&(*save).unkn3, sizeof(int),1,fp);
+   fwrite(&(*save).unkn4, sizeof(int),1,fp);
+   fwrite(&(*save).unkn5, sizeof(int),1,fp);
+   fwrite(&(*save).max_crew, sizeof(int),1,fp);
+   fwrite(&(*save).ss_name_len, sizeof(int),1,fp);
+   fwrite((*save).ss_name, sizeof(char),(*save).ss_name_len,fp);
+   fwrite(&(*save).ss_type_len, sizeof(int),1,fp);
+   fwrite((*save).ss_type, sizeof(char),(*save).ss_type_len,fp);
+   fwrite(&(*save).unkn6, sizeof(int),1,fp);
+   fwrite(&(*save).unkn7, sizeof(int),1,fp);
+   fwrite(&(*save).max_events, sizeof(int),1,fp);
+   for(int i=0;i<(*save).max_events;i++)
+   {
+       fwrite(&(*save).events[i].name_len, sizeof(int),1,fp);
+       fwrite((*save).events[i].name, sizeof(char),(*save).events[i].name_len,fp);
+       fwrite(&(*save).events[i].value, sizeof(int),1,fp);
+   }
+   fwrite(&(*save).ss_type2_len, sizeof(int),1,fp);
+   fwrite((*save).ss_type2, sizeof(char),(*save).ss_type2_len,fp);
+   fwrite(&(*save).ss_name2_len, sizeof(int),1,fp);
+   fwrite((*save).ss_name2, sizeof(char),(*save).ss_name2_len,fp);
+   fwrite(&(*save).ss_class_len, sizeof(int),1,fp);
+   fwrite((*save).ss_class, sizeof(char),(*save).ss_class_len,fp);
+   fwrite(&(*save).start_crew_len, sizeof(int),1,fp);
+   for(int i=0;i<(*save).start_crew_len;i++)
+   {
+       fwrite(&(*save).start_crew[i].race_len, sizeof(int),1,fp);
+       fwrite((*save).start_crew[i].race, sizeof(char),(*save).start_crew[i].race_len,fp);
+       fwrite(&(*save).start_crew[i].name_len, sizeof(int),1,fp);
+       fwrite((*save).start_crew[i].name, sizeof(char),(*save).start_crew[i].name_len,fp);
+   }
+   fwrite(&(*save).ss_integrity, sizeof(int),1,fp);
+   fwrite(&(*save).ss_fuel, sizeof(int),1,fp);
+   fwrite(&(*save).ss_missiles, sizeof(int),1,fp);
+   fwrite(&(*save).ss_droids, sizeof(int),1,fp);
+   fwrite(&(*save).scrap, sizeof(int),1,fp);
+   fwrite(&(*save).current_crew_len, sizeof(int),1,fp);
+   for(int i=0;i<(*save).current_crew_len;i++)
+   {
+       fwrite(&(*save).current_crew[i].name_len, sizeof(int),1,fp);
+       fwrite((*save).current_crew[i].name, sizeof(char),(*save).current_crew[i].name_len,fp);
+       fwrite(&(*save).current_crew[i].race_len, sizeof(int),1,fp);
+       fwrite((*save).current_crew[i].race, sizeof(char),(*save).current_crew[i].race_len,fp);
+       fwrite(&(*save).current_crew[i].unkn1, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].health, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn3, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn4, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn5, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn6, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn7, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn8, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn9, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn10, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn11, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn12, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn13, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn14, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn15, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn16, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn17, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn18, sizeof(int),1,fp);
+       fwrite(&(*save).current_crew[i].unkn19, sizeof(int),1,fp);
+   }
+   fwrite((*save).remaining, sizeof(char),(*save).remaining_len,fp);
+   fclose(fp);
 }
 void usage(char *argbuffer)
 {

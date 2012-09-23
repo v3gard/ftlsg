@@ -2,7 +2,7 @@ struct event
 {
     int name_len;
     char name[50];
-    unsigned int value;
+    int value;
 }; typedef struct event EVENT;
 struct crew
 {
@@ -61,9 +61,12 @@ struct savegame
     EVENT *events;
     CREW *start_crew;
     CREW *current_crew;
+    unsigned long remaining_len;
+    char* remaining;
 };
 typedef struct savegame SAVEGAME;
 void usage(char *argv);
-void parse_data(SAVEGAME *save, char *buffer);
+void parse_data(SAVEGAME *save, char *buffer, unsigned long fileLen);
 void print_data(SAVEGAME *save);
+void save_data(SAVEGAME *save);
 int read_4_le_bytes_as_int(char *buffer, int offset);
