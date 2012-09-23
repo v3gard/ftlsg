@@ -1,0 +1,33 @@
+FTL Savegame Editor
+
+Version: 0.1
+Author: Vegard Haugland <vegard@haugland.at>
+
+Info:
+-----
+
+This application allows you to edit certain variables in the FTL savegame file
+(continue.sav). At the moment, it is limited to modifying:
+
+ - Scrap
+ - Ship Integrity
+ - Fuel
+ - Missiles
+ - Droids 
+
+Usage:
+------
+
+ 1. Run it! (./ftlsg continue.sav)
+ 2. [ do something]
+ 3. Modified savegame is stored as output.sav
+
+Future work:
+------------
+
+Approximately 1/3 of the savegame is being parsed as of this version. Future
+work involves:
+
+ - Parsing (and decoding) 100% of the savegame.
+ - Allowing you to change more variables.
+ - Allowing you to make modifications to your profile.
