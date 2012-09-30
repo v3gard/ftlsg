@@ -61,8 +61,8 @@ int main(int argc, char **argv)
         return 1;
     }
     parse_data(&save, buffer, fileLen);
-    print_data(&save);
-    //user_input(&save);
+    //print_data(&save);
+    user_input(&save);
     save_data(&save);
     fclose(file);
 
@@ -230,9 +230,72 @@ int read_4_le_bytes_as_int(char *buffer, int offset)
 {
     return (unsigned char) buffer[offset+0] | (buffer[offset+1]<<8) | (buffer[offset+2]<<16) | (buffer[offset+3]<<24);
 }
-void clearscreen()
+void user_input_crew(SAVEGAME *save, int crewid)
 {
-    if (system("clear")) system( "cls" );
+    int crewattr;
+    clear();
+    printw("FTL SAVEGAME EDITOR > CREW\n");
+    printw("==========================\n");
+    
+    printw("\n [N]ame: %s\n\n", (*save).current_crew[crewid].name);
+    printw("  - Skill - [P]iloting: %d\n", (*save).current_crew[crewid].skill_pilot);
+    printw("  - Skill - [E]ngines: %d\n", (*save).current_crew[crewid].skill_engines);
+    printw("  - Skill - [S]hields: %d\n", (*save).current_crew[crewid].skill_shields);
+    printw("  - Skill - [W]eapons: %d\n", (*save).current_crew[crewid].skill_weapons);
+    printw("  - Skill - [R]epair: %d\n", (*save).current_crew[crewid].skill_repair);
+    printw("  - Skill - [C]ombat: %d\n", (*save).current_crew[crewid].skill_combat);
+    printw("  - Other - [G]ender: %d\n", (*save).current_crew[crewid].gender);
+    printw("  - Other - [R]ace: %s\n", (*save).current_crew[crewid].race);
+    printw("  - Other - [X] coordinate: %d\n", (*save).current_crew[crewid].x_coord);
+    printw("  - Other - [Y] coordinate: %d\n", (*save).current_crew[crewid].y_coord);
+    attron(A_BOLD);
+    printw("\nWhat do you want to change? [P, E, S, W, R, C, G, X, Y] [return=exit] ");
+    attroff(A_BOLD);
+
+    crewattr = getch(); 
+    switch(crewattr)
+    {
+        case 112: // p
+            printw("\nSet pilot skill value [0-30]: ");
+            scanw("%d", &(*save).current_crew[crewid].skill_pilot);
+            break;
+        case 101: // e
+            printw("\nSet engine skill value [0-30]: ");
+            scanw("%d", &(*save).current_crew[crewid].skill_engines);
+            break;
+        case 115: // s
+            printw("\nSet shield skill value [0-110]: ");
+            scanw("%d", &(*save).current_crew[crewid].skill_shields);
+            break; 
+        case 119: // w
+            printw("\nSet weapon skill value [0-130]: ");
+            scanw("%d", &(*save).current_crew[crewid].skill_weapons);
+            break;
+        case 114: // r
+            printw("\nSet repair skill value [0-36]: ");
+            scanw("%d", &(*save).current_crew[crewid].skill_repair);
+            break;
+        case 99: // c
+            printw("\nSet combat skill value [0-16]: ");
+            scanw("%d", &(*save).current_crew[crewid].skill_combat);
+            break;
+        case 103: // g
+            printw("\nSet gender [0=female, 1=male]: ");
+            scanw("%d", &(*save).current_crew[crewid].gender);
+            break;
+        case 120: // x
+            printw("\nSet X coordinate: ");
+            scanw("%d", &(*save).current_crew[crewid].x_coord);
+            break;
+        case 121: // y
+            printw("\nSet Y coordinate: ");
+            scanw("%d", &(*save).current_crew[crewid].y_coord);
+            break;
+        case 10: // return
+            return;
+        default:
+            break;
+    }
 }
 void user_input(SAVEGAME *save)
 {
@@ -243,26 +306,52 @@ void user_input(SAVEGAME *save)
     {
         printw("FTL SAVEGAME EDITOR\n");
         printw("===================\n\n");
-        printw(" Spaceship: %s\n\n", (*save).ss_name);
-        printw(" - Integrity (i): %d\n", (*save).ss_integrity);
-        printw(" - Fuel (f): %d\n", (*save).ss_fuel);
-        printw(" - Missiles (m): %d\n", (*save).ss_missiles);
-        printw(" - Droids (d): %d\n", (*save).ss_droids);
-        printw(" - Scrap (s): %d\n\n", (*save).scrap);
+        printw(" Spaceship: %s\n", (*save).ss_name);
+        printw(" Crew size: %d\n\n", (*save).current_crew_len);
+        printw(" - [C]rew\n");
+        printw(" - [I]ntegrity: %d\n", (*save).ss_integrity);
+        printw(" - [F]uel: %d\n", (*save).ss_fuel);
+        printw(" - [M]issiles: %d\n", (*save).ss_missiles);
+        printw(" - [D]roids: %d\n", (*save).ss_droids);
+        printw(" - [S]crap: %d\n\n", (*save).scrap);
         attron(A_BOLD);
-        printw("What do you want to change? [I,F,M,D,S] [e=exit] ");
+        printw("What do you want to change? [I,F,M,D,S] [return=exit] ");
         attroff(A_BOLD);
         refresh();
         ch =  getch();
+        printw("\n");
         refresh();
+        int crewid;
+        int temp = 0;
         switch(ch)
         {
-            case 101: // e 
-                quit=1;
+            case 99: // c 
+                for (int i=0;i<(*save).current_crew_len;i++)
+                {
+                    printw(" #%d. %s\n", i+1, (*save).current_crew[i].name);
+                }
+                attron(A_BOLD);
+                printw("\nChoose crew member: ");
+                attroff(A_BOLD);
+                crewid =  getch();
+                crewid-=49;
+                user_input_crew(save, crewid);
                 break;
             case 105: // i 
                 printw("\nSet current integrity value: ");
-                scanw("%d", &(*save).ss_integrity);
+                scanw("%d", &temp);
+                // should validate all input, but the example below is a lot of
+                // work to program (for all variables) not to mention a lot of
+                // work to maintain. need to think this one through...
+                if (temp <= 30 && temp > 0)
+                {
+                    (*save).ss_integrity = temp;
+                }
+                else
+                {
+                    printw("Invalid integrity value. Enter value in range [1-30]\n");
+                    getch();
+                }
                 break;
             case 102: // f 
                 printw("\nSet current fuel value: ");
@@ -280,27 +369,14 @@ void user_input(SAVEGAME *save)
                 printw("\nSet current scrap value: ");
                 scanw("%d", &(*save).scrap);
                 break;
+            case 10: // return
+                quit=1;
+                break;
         }
         clear();
         if (quit == 1) break;
     }
     endwin();
-    //int input = 1;
-    //while(1==1)
-    //{
-    //    if (input == 1)
-    //    {
-    //        printf("What do you want to change? [I,F,M,D,S] [esc=exit] ");
-    //    }
-    //    char input;
-    //    scanf("%c", &input);
-    //    input = 0;
-    //    if (input != 10)
-    //    {
-    //        input = 1;
-    //        printf("\nYou pressed %d\n", input);
-    //    }
-    //}
 }
 void print_data(SAVEGAME *save)
 {
