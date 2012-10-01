@@ -1,6 +1,5 @@
 FTL Savegame Editor
 
-Version: 0.1
 Author: Vegard Haugland <vegard@haugland.at>
 
 Info:
@@ -14,6 +13,7 @@ This application allows you to edit certain variables in the FTL savegame file
  - Fuel
  - Missiles
  - Droids 
+ - Crew attributes, coordinates and gender
 
 Usage:
 ------
