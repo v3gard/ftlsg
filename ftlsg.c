@@ -245,11 +245,11 @@ void user_input_crew(SAVEGAME *save, int crewid)
     printw("  - Skill - [R]epair: %d\n", (*save).current_crew[crewid].skill_repair);
     printw("  - Skill - [C]ombat: %d\n", (*save).current_crew[crewid].skill_combat);
     printw("  - Other - [G]ender: %d\n", (*save).current_crew[crewid].gender);
-    printw("  - Other - [R]ace: %s\n", (*save).current_crew[crewid].race);
+    printw("  - Other - r[A]ce: %s\n", (*save).current_crew[crewid].race);
     printw("  - Other - [X] coordinate: %d\n", (*save).current_crew[crewid].x_coord);
     printw("  - Other - [Y] coordinate: %d\n", (*save).current_crew[crewid].y_coord);
     attron(A_BOLD);
-    printw("\nWhat do you want to change? [P, E, S, W, R, C, G, X, Y] [return=exit] ");
+    printw("\nWhat do you want to change? [P, E, S, W, R, C, G, A, X, Y] [return=exit] ");
     attroff(A_BOLD);
 
     crewattr = getch();
@@ -282,6 +282,12 @@ void user_input_crew(SAVEGAME *save, int crewid)
         case 103: // g
             printw("\nSet gender [0=female, 1=male]: ");
             scanw("%d", &(*save).current_crew[crewid].gender);
+            break;
+        case 97: // a
+            printw("\nSet race [energy, engi, human, mantis, rock, slug]: ");
+            scanw("%s", &(*save).current_crew[crewid].race);
+            // ensure room enough for race name
+            (*save).current_crew[crewid].race_len = 6;
             break;
         case 120: // x
             printw("\nSet X coordinate: ");
