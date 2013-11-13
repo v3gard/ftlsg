@@ -108,7 +108,7 @@ void parse_data(SAVEGAME *save, char *buffer, unsigned long fileLen)
     (*save).unkn7 = read_4_le_bytes_as_int(buffer, (adrp+=4));
     (*save).max_events = read_4_le_bytes_as_int(buffer, (adrp+=4));
     // parse all events
-    (*save).events = (EVENT *)malloc(sizeof(EVENT)*(*save).max_events); 
+    (*save).events = (EVENT *)malloc(sizeof(EVENT)*(*save).max_events);
     for (int i=0; i<(*save).max_events; i++)
     {
         (*save).events[i].name_len = read_4_le_bytes_as_int(buffer, (adrp+=4));
@@ -150,7 +150,7 @@ void parse_data(SAVEGAME *save, char *buffer, unsigned long fileLen)
     (*save).start_crew_len = read_4_le_bytes_as_int(buffer, (adrp+=(*save).ss_class_len));
     adrp+=4;
     // parse all starting crew
-    (*save).start_crew = (CREW *)malloc(sizeof(CREW)*(*save).start_crew_len); 
+    (*save).start_crew = (CREW *)malloc(sizeof(CREW)*(*save).start_crew_len);
     for (int i=0; i<(*save).start_crew_len; i++)
     {
         (*save).start_crew[i].race_len = read_4_le_bytes_as_int(buffer, (adrp));
@@ -177,7 +177,7 @@ void parse_data(SAVEGAME *save, char *buffer, unsigned long fileLen)
     (*save).scrap = read_4_le_bytes_as_int(buffer, (adrp+=4));
     (*save).current_crew_len = read_4_le_bytes_as_int(buffer, (adrp+=4));
     // parse all current crew
-    (*save).current_crew = (CREW *)malloc(sizeof(CREW)*(*save).current_crew_len); 
+    (*save).current_crew = (CREW *)malloc(sizeof(CREW)*(*save).current_crew_len);
     for (int i=0; i<(*save).current_crew_len; i++)
     {
         (*save).current_crew[i].name_len = read_4_le_bytes_as_int(buffer, (adrp+=4));
@@ -220,7 +220,7 @@ void parse_data(SAVEGAME *save, char *buffer, unsigned long fileLen)
     adrp+=4;
     unsigned long remaining = fileLen-adrp;
     (*save).remaining_len = remaining;
-    (*save).remaining = (char *)malloc(sizeof(char)*remaining+1); 
+    (*save).remaining = (char *)malloc(sizeof(char)*remaining+1);
     for (int i=0; i<remaining;i++)
     {
         (*save).remaining[i] = buffer[adrp+i];
@@ -236,8 +236,8 @@ void user_input_crew(SAVEGAME *save, int crewid)
     clear();
     printw("FTL SAVEGAME EDITOR > CREW\n");
     printw("==========================\n");
-    
     printw("\n [N]ame: %s\n\n", (*save).current_crew[crewid].name);
+    printw("\n [M]aximize Stats\n\n");
     printw("  - Skill - [P]iloting: %d\n", (*save).current_crew[crewid].skill_pilot);
     printw("  - Skill - [E]ngines: %d\n", (*save).current_crew[crewid].skill_engines);
     printw("  - Skill - [S]hields: %d\n", (*save).current_crew[crewid].skill_shields);
@@ -245,16 +245,25 @@ void user_input_crew(SAVEGAME *save, int crewid)
     printw("  - Skill - [R]epair: %d\n", (*save).current_crew[crewid].skill_repair);
     printw("  - Skill - [C]ombat: %d\n", (*save).current_crew[crewid].skill_combat);
     printw("  - Other - [G]ender: %d\n", (*save).current_crew[crewid].gender);
-    printw("  - Other - [R]ace: %s\n", (*save).current_crew[crewid].race);
+    printw("  - Other - r[A]ce: %s\n", (*save).current_crew[crewid].race);
     printw("  - Other - [X] coordinate: %d\n", (*save).current_crew[crewid].x_coord);
     printw("  - Other - [Y] coordinate: %d\n", (*save).current_crew[crewid].y_coord);
     attron(A_BOLD);
-    printw("\nWhat do you want to change? [P, E, S, W, R, C, G, X, Y] [return=exit] ");
+    printw("\nWhat do you want to change? [M, P, E, S, W, R, C, G, A, X, Y] [return=exit] ");
     attroff(A_BOLD);
 
-    crewattr = getch(); 
+    crewattr = getch();
     switch(crewattr)
     {
+        case 109: // m
+            // maximizing stats
+            (*save).current_crew[crewid].skill_pilot = 30;
+            (*save).current_crew[crewid].skill_engines = 30;
+            (*save).current_crew[crewid].skill_shields = 110;
+            (*save).current_crew[crewid].skill_weapons = 130;
+            (*save).current_crew[crewid].skill_repair = 36;
+            (*save).current_crew[crewid].skill_combat = 16;
+            break;
         case 112: // p
             printw("\nSet pilot skill value [0-30]: ");
             scanw("%d", &(*save).current_crew[crewid].skill_pilot);
@@ -266,7 +275,7 @@ void user_input_crew(SAVEGAME *save, int crewid)
         case 115: // s
             printw("\nSet shield skill value [0-110]: ");
             scanw("%d", &(*save).current_crew[crewid].skill_shields);
-            break; 
+            break;
         case 119: // w
             printw("\nSet weapon skill value [0-130]: ");
             scanw("%d", &(*save).current_crew[crewid].skill_weapons);
@@ -282,6 +291,12 @@ void user_input_crew(SAVEGAME *save, int crewid)
         case 103: // g
             printw("\nSet gender [0=female, 1=male]: ");
             scanw("%d", &(*save).current_crew[crewid].gender);
+            break;
+        case 97: // a
+            printw("\nSet race [energy, engi, human, mantis, rock, slug]: ");
+            scanw("%s", &(*save).current_crew[crewid].race);
+            // ensure room enough for race name
+            (*save).current_crew[crewid].race_len = 6;
             break;
         case 120: // x
             printw("\nSet X coordinate: ");
@@ -308,14 +323,15 @@ void user_input(SAVEGAME *save)
         printw("===================\n\n");
         printw(" Spaceship: %s\n", (*save).ss_name);
         printw(" Crew size: %d\n\n", (*save).current_crew_len);
+        printw(" [M]aximize resources\n\n");
         printw(" - [C]rew\n");
-        printw(" - [I]ntegrity: %d\n", (*save).ss_integrity);
+        printw(" - i[N]tegrity: %d\n", (*save).ss_integrity);
         printw(" - [F]uel: %d\n", (*save).ss_fuel);
-        printw(" - [M]issiles: %d\n", (*save).ss_missiles);
+        printw(" - m[I]ssiles: %d\n", (*save).ss_missiles);
         printw(" - [D]roids: %d\n", (*save).ss_droids);
         printw(" - [S]crap: %d\n\n", (*save).scrap);
         attron(A_BOLD);
-        printw("What do you want to change? [I,F,M,D,S] [return=exit] ");
+        printw("What do you want to change? [M,C,N,F,I,D,S] [return=exit] ");
         attroff(A_BOLD);
         refresh();
         ch =  getch();
@@ -325,7 +341,14 @@ void user_input(SAVEGAME *save)
         int temp = 0;
         switch(ch)
         {
-            case 99: // c 
+            case 109: // m
+                (*save).scrap = 9999;
+                (*save).ss_droids = 999;
+                (*save).ss_fuel = 999;
+                (*save).ss_integrity = 30;
+                (*save).ss_missiles = 999;
+                break;
+            case 99: // c
                 for (int i=0;i<(*save).current_crew_len;i++)
                 {
                     printw(" #%d. %s\n", i+1, (*save).current_crew[i].name);
@@ -337,7 +360,7 @@ void user_input(SAVEGAME *save)
                 crewid-=49;
                 user_input_crew(save, crewid);
                 break;
-            case 105: // i 
+            case 110: // n
                 printw("\nSet current integrity value: ");
                 scanw("%d", &temp);
                 // should validate all input, but the example below is a lot of
@@ -353,19 +376,19 @@ void user_input(SAVEGAME *save)
                     getch();
                 }
                 break;
-            case 102: // f 
+            case 102: // f
                 printw("\nSet current fuel value: ");
                 scanw("%d", &(*save).ss_fuel);
                 break;
-            case 100: // d 
+            case 100: // d
                 printw("\nSet current droid value: ");
                 scanw("%d", &(*save).ss_droids);
                 break;
-            case 109: // m 
+            case 105: // i
                 printw("\nSet current missile value: ");
                 scanw("%d", &(*save).ss_missiles);
                 break;
-            case 115: // s 
+            case 115: // s
                 printw("\nSet current scrap value: ");
                 scanw("%d", &(*save).scrap);
                 break;
@@ -439,7 +462,7 @@ void print_data(SAVEGAME *save)
 }
 void save_data(SAVEGAME *save)
 {
-   FILE *fp; 
+   FILE *fp;
    fp = fopen("output.sav", "wb");
    fwrite(&(*save).unkn1, sizeof(int),1,fp);
    fwrite(&(*save).unkn2, sizeof(int),1,fp);
