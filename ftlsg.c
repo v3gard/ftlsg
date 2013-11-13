@@ -308,14 +308,15 @@ void user_input(SAVEGAME *save)
         printw("===================\n\n");
         printw(" Spaceship: %s\n", (*save).ss_name);
         printw(" Crew size: %d\n\n", (*save).current_crew_len);
+        printw(" [M]aximize resources\n\n");
         printw(" - [C]rew\n");
-        printw(" - [I]ntegrity: %d\n", (*save).ss_integrity);
+        printw(" - i[N]tegrity: %d\n", (*save).ss_integrity);
         printw(" - [F]uel: %d\n", (*save).ss_fuel);
-        printw(" - [M]issiles: %d\n", (*save).ss_missiles);
+        printw(" - m[I]ssiles: %d\n", (*save).ss_missiles);
         printw(" - [D]roids: %d\n", (*save).ss_droids);
         printw(" - [S]crap: %d\n\n", (*save).scrap);
         attron(A_BOLD);
-        printw("What do you want to change? [I,F,M,D,S] [return=exit] ");
+        printw("What do you want to change? [M,C,N,F,I,D,S] [return=exit] ");
         attroff(A_BOLD);
         refresh();
         ch =  getch();
@@ -325,6 +326,13 @@ void user_input(SAVEGAME *save)
         int temp = 0;
         switch(ch)
         {
+            case 109: // m
+                (*save).scrap = 9999;
+                (*save).ss_droids = 999;
+                (*save).ss_fuel = 999;
+                (*save).ss_integrity = 30;
+                (*save).ss_missiles = 999;
+                break;
             case 99: // c
                 for (int i=0;i<(*save).current_crew_len;i++)
                 {
@@ -337,7 +345,7 @@ void user_input(SAVEGAME *save)
                 crewid-=49;
                 user_input_crew(save, crewid);
                 break;
-            case 105: // i
+            case 110: // n
                 printw("\nSet current integrity value: ");
                 scanw("%d", &temp);
                 // should validate all input, but the example below is a lot of
@@ -361,7 +369,7 @@ void user_input(SAVEGAME *save)
                 printw("\nSet current droid value: ");
                 scanw("%d", &(*save).ss_droids);
                 break;
-            case 109: // m
+            case 105: // i
                 printw("\nSet current missile value: ");
                 scanw("%d", &(*save).ss_missiles);
                 break;
