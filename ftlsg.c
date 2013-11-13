@@ -236,8 +236,8 @@ void user_input_crew(SAVEGAME *save, int crewid)
     clear();
     printw("FTL SAVEGAME EDITOR > CREW\n");
     printw("==========================\n");
-
     printw("\n [N]ame: %s\n\n", (*save).current_crew[crewid].name);
+    printw("\n [M]aximize Stats\n\n");
     printw("  - Skill - [P]iloting: %d\n", (*save).current_crew[crewid].skill_pilot);
     printw("  - Skill - [E]ngines: %d\n", (*save).current_crew[crewid].skill_engines);
     printw("  - Skill - [S]hields: %d\n", (*save).current_crew[crewid].skill_shields);
@@ -249,12 +249,21 @@ void user_input_crew(SAVEGAME *save, int crewid)
     printw("  - Other - [X] coordinate: %d\n", (*save).current_crew[crewid].x_coord);
     printw("  - Other - [Y] coordinate: %d\n", (*save).current_crew[crewid].y_coord);
     attron(A_BOLD);
-    printw("\nWhat do you want to change? [P, E, S, W, R, C, G, A, X, Y] [return=exit] ");
+    printw("\nWhat do you want to change? [M, P, E, S, W, R, C, G, A, X, Y] [return=exit] ");
     attroff(A_BOLD);
 
     crewattr = getch();
     switch(crewattr)
     {
+        case 109: // m
+            // maximizing stats
+            (*save).current_crew[crewid].skill_pilot = 30;
+            (*save).current_crew[crewid].skill_engines = 30;
+            (*save).current_crew[crewid].skill_shields = 110;
+            (*save).current_crew[crewid].skill_weapons = 130;
+            (*save).current_crew[crewid].skill_repair = 36;
+            (*save).current_crew[crewid].skill_combat = 16;
+            break;
         case 112: // p
             printw("\nSet pilot skill value [0-30]: ");
             scanw("%d", &(*save).current_crew[crewid].skill_pilot);
